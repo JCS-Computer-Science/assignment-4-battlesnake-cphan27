@@ -46,7 +46,7 @@ app.post("/start", (req,res) => {
 //      https://docs.battlesnake.com/api/requests/move
 
 app.post("/move", (req, res) => {
-  let move = move(req.body)
+  let newMove = move(req.body)
   res.send(newMove)
 })
 
