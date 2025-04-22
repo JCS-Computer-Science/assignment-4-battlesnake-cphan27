@@ -168,18 +168,40 @@ export default function move(gameState){
             console.log(`MOVE ${gameState.turn}: Moving towards food - up`);
             return { move: "up" };
         }
-    }
-    for (const snake of gameState.board.snakes) {
-        const enemyHead = snake.body[0];
-        if (snake.body.length >= myBody.length) { // Avoid head-on collisions unless you're larger
-            if (enemyHead.x === myHead.x && enemyHead.y === myHead.y + 1) moveSafety.up = false;
-            if (enemyHead.x === myHead.x && enemyHead.y === myHead.y - 1) moveSafety.down = false;
-            if (enemyHead.x === myHead.x - 1 && enemyHead.y === myHead.y) moveSafety.left = false;
-            if (enemyHead.x === myHead.x + 1 && enemyHead.y === myHead.y) moveSafety.right = false;
-        }
-    }
-        
 
+
+    }
+    let longestSnake = null;
+let longestLength = 0;
+
+for (const snake of gameState.board.snakes) {
+    if (snake.body.length > longestLength) {
+        longestSnake = snake;
+        longestLength = snake.body.length;
+    }
+}
+
+if (longestSnake) {
+    const tail = longestSnake.body[longestSnake.body.length - 1]; // findtail of the longest snake
+
+    // moves snake to chase the tail
+    if (tail.x < myHead.x && moveSafety.left) {
+        console.log(`MOVE ${gameState.turn}: Chasing longest snake's tail - left`);
+        return { move: "left" };
+    }
+    if (tail.x > myHead.x && moveSafety.right) {
+        console.log(`MOVE ${gameState.turn}: Chasing longest snake's tail - right`);
+        return { move: "right" };
+    }
+    if (tail.y < myHead.y && moveSafety.down) {
+        console.log(`MOVE ${gameState.turn}: Chasing longest snake's tail - down`);
+        return { move: "down" };
+    }
+    if (tail.y > myHead.y && moveSafety.up) {
+        console.log(`MOVE ${gameState.turn}: Chasing longest snake's tail - up`);
+        return { move: "up" };
+    }
+}
     console.log(`MOVE ${gameState.turn}: ${nextMove}`)
     return { move: nextMove };
 }
