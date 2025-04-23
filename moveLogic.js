@@ -6,6 +6,7 @@ export default function move(gameState){
         right: true
     };
     
+    //next class: stop colliding w classmates, stop chasing food, dont collide w body
     
     // We've included code to prevent your Battlesnake from moving backwards
     const myHead = gameState.you.body[0];
@@ -47,15 +48,81 @@ export default function move(gameState){
     if (myHead.y === boardHeight - 1) { // Head is at the top edge, don't move up
         moveSafety.up = false;
     }
+
+
     
+    //  let nextMovement = null;
+    //  if (moveSafety.up) {
+    //     nextMovement = "up";
+    //  } else if (moveSafety.down) {
+    //     nextMovement = "down";
+    //  } else if (moveSafety.left) {
+    //      // If vertical moves are unsafe, move left for safety
+    //      nextMovement = "left";
+    //  } else if (moveSafety.right) {
+    //      // If vertical moves are unsafe, move right for safety
+    //      nextMovement = "right";
+    //  }
+ 
+    //  // If no safe moves are left, default to moving down
+    //  if (!nextMovement) {
+    //      console.log(`MOVE ${gameState.turn}: No safe moves detected! Moving down`);
+    //      return { move: "down" };
+    //  }
+
+    //  console.log(`MOVE ${gameState.turn}: ${nextMovement}`);
+    // return { move: nextMovement };
+    let nextMovement = null;
+
+    if (gameState.you.health < 50 && gameState.board.food.length > 0) {
+        const food = gameState.board.food;
+        let closestFood = food[0];
+        let minDistance = Math.abs(myHead.x - food[0].x) + Math.abs(myHead.y - food[0].y);
+
+        for (const item of food) {
+            const distance = Math.abs(myHead.x - item.x) + Math.abs(myHead.y - item.y);
+            if (distance < minDistance) {
+                closestFood = item;
+                minDistance = distance;
+            }
+        }
+
+        // food if safe moves
+        // if (closestFood.x < myHead.x && moveSafety.left) {
+        //     nextMovement = "left";
+        // } else if (closestFood.x > myHead.x && moveSafety.right) {
+        //     nextMovement = "right";
+        // } else if (closestFood.y < myHead.y && moveSafety.down) {
+        //     nextMovement = "down";
+        // } else if (closestFood.y > myHead.y && moveSafety.up) {
+        //     nextMovement = "up";
+        // }
+    }
+
+    // // 
+    // if (!nextMovement) {
+    //     if (moveSafety.up) {
+    //         nextMovement = "up";
+    //     } else if (moveSafety.down) {
+    //         nextMovement = "down";
+    //     } else if (moveSafety.left) {
+    //         nextMovement = "left";
+    //     } else if (moveSafety.right) {
+    //         nextMovement = "right";
+    //     }
+
+    //     // If no safe moves are left, default to moving down
+    //     if (!nextMovement) {
+    //         console.log(`MOVE ${gameState.turn}: No safe moves detected! Moving down`);
+    //         return { move: "down" };
+    //     }
+    // }
 
 
 
 
-
-
-
-
+ 
+   
 
     // TODO: Step 2 - Prevent your Battlesnake from colliding with itself
     // gameState.you contains an object representing your snake, including its coordinates
@@ -94,6 +161,69 @@ export default function move(gameState){
             }
         }
     }
+
+    // Detect danger: Check if any enemy snake's head is parallel to our head
+let enemyHeads = [];
+for (let i = 0; i < gameState.board.snakes.length; i++) {
+    enemyHeads.push(gameState.board.snakes[i].body[0]); // Collect all enemy snake heads
+}
+
+function isEnemyHeadParallel(direction) {
+    for (let i = 0; i < enemyHeads.length; i++) {
+        let head = enemyHeads[i];
+        if (direction === "up" && head.x === myHead.x && head.y === myHead.y + 1) {
+            return true;
+        }
+        if (direction === "down" && head.x === myHead.x && head.y === myHead.y - 1) {
+            return true;
+        }
+        if (direction === "left" && head.x === myHead.x - 1 && head.y === myHead.y) {
+            return true;
+        }
+        if (direction === "right" && head.x === myHead.x + 1 && head.y === myHead.y) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// avoid enemy snake heads by going perp
+if (isEnemyHeadParallel("up")) {
+    moveSafety.up = false;
+    if (moveSafety.left) {
+        return { move: "left" };
+    }
+    if (moveSafety.right) {
+        return { move: "right" };
+    }
+}
+if (isEnemyHeadParallel("down")) {
+    moveSafety.down = false;
+    if (moveSafety.left) {
+        return { move: "left" };
+    }
+    if (moveSafety.right) {
+        return { move: "right" };
+    }
+}
+if (isEnemyHeadParallel("left")) {
+    moveSafety.left = false;
+    if (moveSafety.up) {
+        return { move: "up" };
+    }
+    if (moveSafety.down) {
+        return { move: "down" };
+    }
+}
+if (isEnemyHeadParallel("right")) {
+    moveSafety.right = false;
+    if (moveSafety.up) {
+        return { move: "up" };
+    }
+    if (moveSafety.down) {
+        return { move: "down" };
+    }
+}
     
 
     // Are there any safe moves left?
@@ -131,6 +261,8 @@ export default function move(gameState){
                 minDistance = distance;
             }
         }
+
+        
 
         // Adjust safe moves toward closest food
         if (closestFood.x < myHead.x && moveSafety.left) return { move: "left" };
@@ -171,7 +303,53 @@ export default function move(gameState){
 
 
     }
-    let longestSnake = null;
+
+// health is low move to food
+if (gameState.you.health < 50 && gameState.board.food.length > 0) {
+    const food = gameState.board.food;
+    let closestFood = food[0];
+    let minDistance = Math.abs(myHead.x - food[0].x) + Math.abs(myHead.y - food[0].y);
+
+    for (const item of food) {
+        const distance = Math.abs(myHead.x - item.x) + Math.abs(myHead.y - item.y);
+        if (distance < minDistance) {
+            closestFood = item;
+            minDistance = distance;
+        }
+    }
+
+    if (closestFood.x < myHead.x && moveSafety.left && !isDangerAhead("left")) {
+        return { move: "left" };
+    }
+    if (closestFood.x > myHead.x && moveSafety.right && !isDangerAhead("right")) {
+        return { move: "right" };
+    }
+    if (closestFood.y < myHead.y && moveSafety.down && !isDangerAhead("down")) {
+        return { move: "down" };
+    }
+    if (closestFood.y > myHead.y && moveSafety.up && !isDangerAhead("up")) {
+        return { move: "up" };
+    }
+
+    // if head on head choose a perp safe move
+    if (isDangerAhead("up") && (moveSafety.left || moveSafety.right)) {
+        return { move: moveSafety.left ? "left" : "right" };
+    }
+    if (isDangerAhead("down") && (moveSafety.left || moveSafety.right)) {
+        return { move: moveSafety.left ? "left" : "right" };
+    }
+    if (isDangerAhead("left") && (moveSafety.up || moveSafety.down)) {
+        return { move: moveSafety.up ? "up" : "down" };
+    }
+    if (isDangerAhead("right") && (moveSafety.up || moveSafety.down)) {
+        return { move: moveSafety.up ? "up" : "down" };
+    }
+}
+
+
+
+    // Find the longest snake and its tail
+let longestSnake = null;
 let longestLength = 0;
 
 for (const snake of gameState.board.snakes) {
@@ -181,10 +359,11 @@ for (const snake of gameState.board.snakes) {
     }
 }
 
-if (longestSnake) {
-    const tail = longestSnake.body[longestSnake.body.length - 1]; // findtail of the longest snake
 
-    // moves snake to chase the tail
+if (longestSnake && longestLength <= 15) { //dont follow if longer than 15
+    const tail = longestSnake.body[longestSnake.body.length - 1]; //find the tail of the longest snake
+
+    // chase the tail
     if (tail.x < myHead.x && moveSafety.left) {
         console.log(`MOVE ${gameState.turn}: Chasing longest snake's tail - left`);
         return { move: "left" };
@@ -205,3 +384,4 @@ if (longestSnake) {
     console.log(`MOVE ${gameState.turn}: ${nextMove}`)
     return { move: nextMove };
 }
+
