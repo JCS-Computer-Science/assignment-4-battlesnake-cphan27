@@ -385,3 +385,94 @@ if (longestSnake && longestLength <= 15) { //dont follow if longer than 15
     return { move: nextMove };
 }
 
+function findSafeDirections(gameBoard, snakeBody, dangerZones, currentHealth) {
+    const snakeHead = snakeBody[0]; // The head of the snake
+    const snakeSegments = new Set(snakeBody.map(([x, y]) => `${x},${y}`)); // Snake's body as a set of coordinates
+    const [boardHeight, boardWidth] = [gameBoard.length, gameBoard[0].length];
+    const hazardAreas = new Set(dangerZones.map(([x, y]) => `${x},${y}`)); // Hazards as a set of coordinates
+  
+    // Helper function to check if a space has at least 2 open adjacent spaces
+    function hasEnoughSpace([x, y]) {
+      const adjacentSpaces = [
+        [x - 1, y], // Up
+        [x + 1, y], // Down
+        [x, y - 1], // Left
+        [x, y + 1], // Right
+      ];
+  
+      // Count open spaces (within bounds, not in snake body, and not in hazards)
+      let openCount = 0;
+  
+      adjacentSpaces.forEach(([adjX, adjY]) => {
+        const withinBounds = adjX >= 0 && adjX < boardHeight && adjY >= 0 && adjY < boardWidth;
+        const notInBody = !snakeSegments.has(`${adjX},${adjY}`);
+        const notInHazard = !hazardAreas.has(`${adjX},${adjY}`);
+  
+        if (withinBounds && notInBody && notInHazard) {
+          openCount++;
+        }
+      });
+  
+      return openCount >= 2; // At least 2 open spaces
+    }
+  
+    // All possible moves around the snake's head
+    const potentialMoves = {
+      up: [snakeHead[0] - 1, snakeHead[1]],
+      down: [snakeHead[0] + 1, snakeHead[1]],
+      left: [snakeHead[0], snakeHead[1] - 1],
+      right: [snakeHead[0], snakeHead[1] + 1],
+    };
+  
+    // Separate moves into categories: safe and unsafe
+    const safeMoves = [];
+  
+    Object.keys(potentialMoves).forEach((move) => {
+      const [nextX, nextY] = potentialMoves[move];
+  
+      // Check if the move is inside the board boundaries
+      const isWithinBounds = nextX >= 0 && nextX < boardHeight && nextY >= 0 && nextY < boardWidth;
+  
+      // Check if the move doesn't collide with the snake's body
+      const avoidsSelfCollision = !snakeSegments.has(`${nextX},${nextY}`);
+  
+      // Check if the move doesn't land in a hazard area
+      const avoidsHazards = !hazardAreas.has(`${nextX},${nextY}`);
+  
+      // Check if the move leads to a space with enough adjacent open spaces
+      const hasSpace = hasEnoughSpace([nextX, nextY]);
+  
+      if (isWithinBounds && avoidsSelfCollision && avoidsHazards && hasSpace) {
+        safeMoves.push(move); // Move is safe
+      }
+    });
+  
+    // Return safe moves
+    return safeMoves;
+  }
+  
+  // Example usage
+  const gameBoard = [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+  ];
+  
+  const snakeBody = [
+    [2, 2], // Head
+    [2, 3], // Body segment
+    [3, 3], // Body segment
+  ];
+  
+  const dangerZones = [
+    [1, 1],
+    [1, 2],
+    [1, 3],
+  ];
+  
+  const currentHealth = 15;
+  
+  const safeDirections = findSafeDirections(gameBoard, snakeBody, dangerZones, currentHealth);
+  console.log("Safe Directions:", safeDirections); // Example Output: ["down", "left"]
